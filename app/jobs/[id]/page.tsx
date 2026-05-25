@@ -26,7 +26,7 @@ export default function JobDetailsPage() {
     if (!id) return;
     const fetchJobDetails = async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:5000/api/jobs/${id}`);
+        const res = await fetch(`http://localhost:5000/api/jobs/${id}`);
         if (res.ok) {
           const data = await res.json();
           setJob(data);
@@ -63,7 +63,7 @@ export default function JobDetailsPage() {
     formData.append("resume", resumeFile);
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/applications", {
+      const response = await fetch("http://localhost:5000/api/applications", {
         method: "POST",
         body: formData,
       });

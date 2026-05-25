@@ -3,23 +3,23 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogIn, LogOut, LayoutDashboard, Briefcase } from "lucide-react";
+import { LogIn, LogOut, LayoutDashboard, UserCheck, Briefcase } from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
   const [role, setRole] = useState<string | null>(null);
 
-  // Synchronize state dynamically across components from localStorage parameters
+  // Pull fresh authentication tokens straight from local storage
   const syncAuthStatus = () => {
     const userRole = localStorage.getItem("userRole");
     setRole(userRole);
   };
 
   useEffect(() => {
-    // 1. Initial configuration mapping pass execution on component initialization
+    // 1. Establish state configurations during initialization passes
     syncAuthStatus();
 
-    // 2. Continuous observation loop binding targeting custom global authentication triggers
+    // 2. Bind application-wide tracking loops targeting cross-component events
     window.addEventListener("authChange", syncAuthStatus);
 
     return () => {
@@ -32,16 +32,16 @@ export default function Navbar() {
     localStorage.removeItem("adminEmail");
     localStorage.removeItem("userEmail");
 
-    // Inform all components to sync their UI layouts instantly
+    // Force layout states to update instantly
     window.dispatchEvent(new Event("authChange"));
 
-    // Kick back to the public homepage gateway
+    // Return to public home index view
     router.push("/");
   };
 
   return (
     <nav className="w-full bg-white border-b border-gray-100 px-8 py-4 flex justify-between items-center max-w-7xl mx-auto">
-      {/* Brand Branding Core Link Anchor */}
+      {/* Brand Logo Identity Link */}
       <Link href="/" className="flex items-center gap-2 cursor-pointer">
         <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-100">
           പ
@@ -51,12 +51,12 @@ export default function Navbar() {
         </span>
       </Link>
 
-      {/* Dynamic Link & Action Controls Section */}
+      {/* Navigation Routes Links Area */}
       <div className="flex items-center gap-6 text-sm font-bold text-gray-500">
         <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
         <Link href="/" className="hover:text-gray-900 transition-colors">Find Jobs</Link>
 
-        {/* Conditional Layout Injection targeting only authenticated Admin Sessions */}
+        {/* CONDITION 1: Active Administrative System Session */}
         {role === "admin" && (
           <>
             <Link href="/admin/dashboard" className="text-blue-600 flex items-center gap-1.5 hover:underline">
@@ -68,7 +68,14 @@ export default function Navbar() {
           </>
         )}
 
-        {/* Dynamic Auth Button Flow Render Engine Wrapper */}
+        {/* CONDITION 2: Active Seeker/Candidate Account Session */}
+        {role === "user" && (
+          <Link href="/" className="text-green-600 flex items-center gap-1.5 bg-green-50 px-3 py-1.5 rounded-xl border border-green-100/40 text-xs">
+            <UserCheck className="w-3.5 h-3.5" /> My Applications
+          </Link>
+        )}
+
+        {/* Dynamic Auth Action Control Toggle Engine */}
         {role ? (
           <button
             onClick={handleLogout}

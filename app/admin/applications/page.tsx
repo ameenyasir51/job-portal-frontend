@@ -14,7 +14,17 @@ export default function AdminApplicationsPage() {
 
   const fetchApplications = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/applications", { cache: "no-store" });
+      const storedToken = localStorage.getItem("adminToken");
+      const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      if (storedToken) {
+        authHeaders["Authorization"] = `Bearer ${storedToken}`;
+      }
+
+      const res = await fetch("http://localhost:5000/api/applications", {
+        method: "GET",
+        credentials: "include",
+        headers: authHeaders,
+      });
       if (res.ok) {
         const data = await res.json();
         setApplications(data);
@@ -32,9 +42,16 @@ export default function AdminApplicationsPage() {
 
   const handleStatusChange = async (appId: string, newStatus: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/applications/${appId}`, {
+      const storedToken = localStorage.getItem("adminToken");
+      const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      if (storedToken) {
+        authHeaders["Authorization"] = `Bearer ${storedToken}`;
+      }
+
+      const res = await fetch(`http://localhost:5000/api/applications/${appId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: authHeaders,
         body: JSON.stringify({ status: newStatus }),
       });
 
@@ -123,7 +140,7 @@ export default function AdminApplicationsPage() {
                 {/* Document viewing anchor links attachment wrapper */}
                 {app.resume && (
                   <a
-                    href={`http://127.0.0.1:5000/${app.resume}`}
+                    href={`http://localhost:5000/${app.resume}`}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-all w-fit mt-1"

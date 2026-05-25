@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Mail } from "lucide-react";
+import Link from "next/link";
 
 export default function SeekerLoginPage() {
   const router = useRouter();
@@ -16,8 +16,15 @@ export default function SeekerLoginPage() {
     setLoading(true);
     setErrorMsg("");
 
+    // MENTOR SPECIFICATION: Frontend structural check to catch simple text blocks like '12345'
+    if (!email.includes("@") || !email.includes(".")) {
+      setErrorMsg("Invalid email format syntax (e.g., username@gmail.com).");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/users/login", {
+      const response = await fetch("http://localhost:5000/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -29,14 +36,16 @@ export default function SeekerLoginPage() {
         localStorage.setItem("userRole", "user");
         localStorage.setItem("userEmail", data.user.email);
         
-        // Signal layout components to sync status
+        // Broadcast updates to synchronize Navbar triggers
         window.dispatchEvent(new Event("authChange"));
-        router.push("/"); // Standard seekers land back on home page
+        router.push("/"); 
       } else {
-        setErrorMsg(data.message || "Invalid candidate credentials.");
+        // Displays precise response error context messages ('Incorrect password', etc.)
+        setErrorMsg(data.message || "Invalid authentication criteria.");
       }
     } catch (err) {
-      setErrorMsg("Connection to server failed.");
+      console.error("Login route error:", err);
+      setErrorMsg("Server processing failure. Check your backend status link.");
     } finally {
       setLoading(false);
     }
@@ -51,7 +60,7 @@ export default function SeekerLoginPage() {
         </div>
 
         {errorMsg && (
-          <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-red-700 text-xs text-center font-medium">
+          <div className="p-3.5 bg-red-50 border border-red-100 rounded-xl text-red-700 text-xs text-center font-semibold">
             ⚠️ {errorMsg}
           </div>
         )}
@@ -60,7 +69,7 @@ export default function SeekerLoginPage() {
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-gray-600">Candidate Email</label>
             <input 
-              type="email" 
+              type="text" 
               required 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
@@ -89,6 +98,11 @@ export default function SeekerLoginPage() {
             {loading ? "Logging in..." : "Sign In to Apply"}
           </button>
         </form>
+
+        {/* MENTOR SPECIFICATION: Direct pipeline navigation route shortcut accessing registration forms */}
+        <div className="text-center text-xs text-gray-400 font-medium pt-4 border-t border-gray-100 mt-4">
+          New to the platform? <Link href="/register" className="text-blue-600 font-bold hover:underline">Create an account</Link>
+        </div>
       </div>
     </div>
   );
