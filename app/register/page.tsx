@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -10,9 +10,9 @@ export default function SeekerRegisterPage() {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,13 +20,11 @@ export default function SeekerRegisterPage() {
     setErrorMsg("");
     setSuccessMsg("");
 
-    // Frontend structural validation check
     if (!email.includes("@") || !email.includes(".")) {
       setErrorMsg("Please enter a valid email address format (e.g., name@domain.com).");
       setLoading(false);
       return;
     }
-
     if (password.length < 6) {
       setErrorMsg("Password must be at least 6 characters long.");
       setLoading(false);
@@ -34,102 +32,70 @@ export default function SeekerRegisterPage() {
     }
 
     try {
-      // 🧠 FIXED: Attached the full structured payload required by your partner's schema controllers
-      const response = await fetch("http://localhost:5000/api/user/register", {
+      // 🧠 FIXED: Linked dynamic backend environment endpoint template
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          fullname, 
-          email, 
-          phoneNumber, 
-          password, 
-          role: "student" // Explicitly flags the profile role as candidate/student
-        }),
+        body: JSON.stringify({
+          fullname,
+          email,
+          phoneNumber,
+          password,
+          role: "student"
+        })
       });
 
       const data = await response.json();
 
-      if (response.ok || data.success) {
-        setSuccessMsg("Account created successfully! Redirecting to login page...");
+      if (response.ok) {
+        setSuccessMsg("Account created successfully! Redirecting...");
         setTimeout(() => router.push("/login"), 2000);
       } else {
-        setErrorMsg(data.message || "Registration failed.");
+        setErrorMsg(data.message || "Registration failed framework steps.");
       }
     } catch (err) {
-      setErrorMsg("Connection to server failed.");
+      console.error("Registration error:", err);
+      setErrorMsg("Connection error hitting identity authorization server pipeline.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-4 bg-gray-50/40">
-      <div className="w-full max-w-md p-8 bg-white border border-gray-100 shadow-2xl rounded-3xl space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Create Candidate Account</h1>
-          <p className="text-gray-400 text-xs">Join our platform to safely apply for open positions.</p>
+    <div className="max-w-md mx-auto mt-12 p-8 bg-white border border-gray-100 shadow-xl rounded-3xl space-y-6">
+      <div>
+        <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Create Student Profile</h2>
+        <p className="text-gray-400 text-xs mt-1">Register to join the recruitment platform pipeline framework clusters.</p>
+      </div>
+
+      {errorMsg && <div className="text-xs font-bold text-red-600 bg-red-50 p-3 rounded-xl border border-red-100">{errorMsg}</div>}
+      {successMsg && <div className="text-xs font-bold text-green-600 bg-green-50 p-3 rounded-xl border border-green-100">{successMsg}</div>}
+
+      <form onSubmit={handleRegister} className="space-y-4">
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-600">Full Name</label>
+          <input type="text" required placeholder="Raees Rehman" value={fullname} onChange={(e) => setFullname(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-600">Email Address</label>
+          <input type="email" required placeholder="raees@gmail.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-600">Phone Number</label>
+          <input type="tel" required placeholder="9539963533" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-600">Choose Password</label>
+          <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
 
-        {errorMsg && <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-red-700 text-xs text-center font-medium">⚠️ {errorMsg}</div>}
-        {successMsg && <div className="p-3 bg-green-50 border border-green-100 rounded-xl text-green-700 text-xs text-center font-medium">✅ {successMsg}</div>}
+        <button type="submit" disabled={loading} className="w-full h-11 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-xs shadow-md shadow-green-100 cursor-pointer disabled:bg-gray-400 mt-2">
+          {loading ? "Creating Account..." : "Sign Up"}
+        </button>
+      </form>
 
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-600">Full Name</label>
-            <input 
-              type="text" 
-              required 
-              value={fullname} 
-              onChange={(e) => setFullname(e.target.value)} 
-              placeholder="Enter your full name" 
-              className="w-full p-3 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500" 
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-600">Email Address</label>
-            <input 
-              type="email" 
-              required 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              placeholder="yourname@gmail.com" 
-              className="w-full p-3 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500" 
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-600">Phone Number</label>
-            <input 
-              type="tel" 
-              required 
-              value={phoneNumber} 
-              onChange={(e) => setPhoneNumber(e.target.value)} 
-              placeholder="Enter phone number" 
-              className="w-full p-3 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500" 
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-600">Choose Password</label>
-            <input 
-              type="password" 
-              required 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              placeholder="••••••••" 
-              className="w-full p-3 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500" 
-            />
-          </div>
-
-          <button type="submit" disabled={loading} className="w-full h-12 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold shadow-md cursor-pointer transition-all disabled:bg-gray-400">
-            {loading ? "Creating Account..." : "Sign Up"}
-          </button>
-        </form>
-
-        <div className="text-center text-xs text-gray-400 font-medium pt-2">
-          Already have an account? <Link href="/login" className="text-blue-600 font-bold hover:underline">Log In</Link>
-        </div>
+      <div className="text-center text-xs text-gray-400 pt-2 border-t border-gray-50">
+        Already have an account? <Link href="/login" className="text-blue-600 font-bold hover:underline">Log In</Link>
       </div>
     </div>
   );

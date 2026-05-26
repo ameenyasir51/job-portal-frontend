@@ -14,7 +14,7 @@ export default function JobDetailsPage() {
   // Modals Controller States
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isWarningModalOpen, setIsWarningModalOpen] = useState(false); 
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // 🧠 NEW: Success dialog visibility controller
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   // Form Field Hooks
   const [name, setName] = useState("");
@@ -27,7 +27,8 @@ export default function JobDetailsPage() {
     if (!id) return;
     const fetchJobDetails = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/jobs/${id}`);
+        // 🧠 FIXED: Dynamic API Environment Variable URL Connection
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs/${id}`);
         if (res.ok) {
           const data = await res.json();
           setJob(data);
@@ -66,7 +67,8 @@ export default function JobDetailsPage() {
     formData.append("resume", resumeFile);
 
     try {
-      const response = await fetch("http://localhost:5000/api/applications", {
+      // 🧠 FIXED: Dynamic API Environment Variable URL Connection
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${storedToken}`,
@@ -77,7 +79,6 @@ export default function JobDetailsPage() {
       const data = await response.json();
 
       if (response.ok || data.success) {
-        // 🧠 FIXED: Hide form, reset inputs, and pop open our custom Success Dialog box
         setIsFormModalOpen(false);
         setIsSuccessModalOpen(true);
         setName(""); setEmail(""); setPhone(""); setResumeFile(null);
@@ -165,9 +166,7 @@ export default function JobDetailsPage() {
         </div>
       )}
 
-      {/* =========================================================================
-          🧠 NEW: CUSTOM DIALOG BOX FOR APPLICATION SUBMISSION SUCCESS
-         ========================================================================= */}
+      {/* --- CUSTOM DIALOG BOX FOR APPLICATION SUBMISSION SUCCESS --- */}
       {isSuccessModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-sm p-6 bg-white border border-gray-100 shadow-2xl rounded-3xl text-center space-y-4 animate-scaleUp">

@@ -8,107 +8,70 @@ export default function SeekerLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSeekerLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMsg("");
-
-    // MENTOR SPECIFICATION: Frontend structural check to catch simple text blocks like '12345'
-    if (!email.includes("@") || !email.includes(".")) {
-      setErrorMsg("Invalid email format syntax (e.g., username@gmail.com).");
-      setLoading(false);
-      return;
-    }
+    setError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/user/login", {
+      // 🧠 FIXED: Linked dynamic backend environment endpoint template
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
-      if (response.ok || data.success) {
-        // 🧠 FIXED: Securely extract and commit the auth token to local storage structures
-        if (data.token) {
-          localStorage.setItem("token", data.token);
-        }
-        
-        // 🧠 FIXED: Aligned the storage indicator metadata to point to "student"
-        localStorage.setItem("userRole", "student");
+      if (response.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userRole", data.user?.role || "student");
         localStorage.setItem("userEmail", data.user?.email || email);
         
-        // Broadcast updates to synchronize Navbar triggers
         window.dispatchEvent(new Event("authChange"));
-        router.push("/"); 
+        router.push("/");
       } else {
-        // Displays precise response error context messages ('Incorrect password', etc.)
-        setErrorMsg(data.message || "Invalid authentication criteria.");
+        setError(data.message || "Invalid login credentials.");
       }
     } catch (err) {
-      console.error("Login route error:", err);
-      setErrorMsg("Server processing failure. Check your backend status link.");
+      console.error("Login failure:", err);
+      setError("Failed to connect with authentication servers.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4 bg-gray-50/40">
-      <div className="w-full max-w-md p-8 bg-white border border-gray-100 shadow-2xl rounded-3xl space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Candidate Portal Login</h1>
-          <p className="text-gray-400 text-xs">Sign in to find positions and manage your applications.</p>
+    <div className="max-w-md mx-auto mt-16 p-8 bg-white border border-gray-100 shadow-xl rounded-3xl space-y-6">
+      <div>
+        <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Sign In to Student Account</h2>
+        <p className="text-gray-400 text-xs mt-1">Welcome back! Access your profile data pipeline hooks.</p>
+      </div>
+
+      {error && <div className="text-xs font-bold text-red-600 bg-red-50 p-3 rounded-xl border border-red-100">{error}</div>}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-600">Email Address</label>
+          <input type="email" required placeholder="raees@gmail.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-600">Password</label>
+          <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
 
-        {errorMsg && (
-          <div className="p-3.5 bg-red-50 border border-red-100 rounded-xl text-red-700 text-xs text-center font-semibold">
-            ⚠️ {errorMsg}
-          </div>
-        )}
+        <button type="submit" disabled={loading} className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-100 cursor-pointer disabled:bg-gray-400 mt-2">
+          {loading ? "Logging in..." : "Sign In to Apply"}
+        </button>
+      </form>
 
-        <form onSubmit={handleSeekerLogin} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-600">Candidate Email</label>
-            <input 
-              type="text" 
-              required 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              placeholder="user@gmail.com" 
-              className="w-full p-3 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500" 
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-600">Account Password</label>
-            <input 
-              type="password" 
-              required 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              placeholder="••••••••" 
-              className="w-full p-3 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500" 
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={loading} 
-            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md cursor-pointer transition-all disabled:bg-gray-400"
-          >
-            {loading ? "Logging in..." : "Sign In to Apply"}
-          </button>
-        </form>
-
-        {/* MENTOR SPECIFICATION: Direct pipeline navigation route shortcut accessing registration forms */}
-        <div className="text-center text-xs text-gray-400 font-medium pt-4 border-t border-gray-100 mt-4">
-          New to the platform? <Link href="/register" className="text-blue-600 font-bold hover:underline">Create an account</Link>
-        </div>
+      <div className="text-center text-xs text-gray-400 pt-2 border-t border-gray-50">
+        New to the platform? <Link href="/register" className="text-blue-600 font-bold hover:underline">Create an Account</Link>
       </div>
     </div>
   );
