@@ -24,7 +24,7 @@ export default function SeekerLoginPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/users/login", {
+      const response = await fetch("http://localhost:5000/api/user/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -32,9 +32,15 @@ export default function SeekerLoginPage() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        localStorage.setItem("userRole", "user");
-        localStorage.setItem("userEmail", data.user.email);
+      if (response.ok || data.success) {
+        // 🧠 FIXED: Securely extract and commit the auth token to local storage structures
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+        }
+        
+        // 🧠 FIXED: Aligned the storage indicator metadata to point to "student"
+        localStorage.setItem("userRole", "student");
+        localStorage.setItem("userEmail", data.user?.email || email);
         
         // Broadcast updates to synchronize Navbar triggers
         window.dispatchEvent(new Event("authChange"));

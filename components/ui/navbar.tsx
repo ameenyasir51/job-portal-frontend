@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogIn, LogOut, LayoutDashboard, UserCheck, Briefcase } from "lucide-react";
+import { LogIn, LogOut, LayoutDashboard, UserCheck } from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
@@ -28,6 +28,8 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = () => {
+    // 🧠 FIXED: Thoroughly clear session token tracking metrics to prevent auth loop residues
+    localStorage.removeItem("token");
     localStorage.removeItem("userRole");
     localStorage.removeItem("adminEmail");
     localStorage.removeItem("userEmail");
@@ -68,9 +70,14 @@ export default function Navbar() {
           </>
         )}
 
-        {/* CONDITION 2: Active Seeker/Candidate Account Session */}
-        {role === "user" && (
-          <Link href="/" className="text-green-600 flex items-center gap-1.5 bg-green-50 px-3 py-1.5 rounded-xl border border-green-100/40 text-xs">
+        {/* =========================================================================
+            🧠 CONDITION 2: FIXED - Active Seeker/Candidate Account Session ("student")
+           ========================================================================= */}
+        {role === "student" && (
+          <Link 
+            href="/my-applications" 
+            className="text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 px-4 py-2 rounded-xl border border-green-100 transition-colors flex items-center gap-1.5"
+          >
             <UserCheck className="w-3.5 h-3.5" /> My Applications
           </Link>
         )}

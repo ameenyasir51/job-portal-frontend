@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Building, MapPin, DollarSign, Calendar, FileText, Send, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Building, MapPin, DollarSign, Calendar, FileText, Send, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export default function JobDetailsPage() {
   const { id } = useParams();
@@ -13,7 +13,8 @@ export default function JobDetailsPage() {
 
   // Modals Controller States
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [isWarningModalOpen, setIsWarningModalOpen] = useState(false); // Custom Shadcn replacement for alert()
+  const [isWarningModalOpen, setIsWarningModalOpen] = useState(false); 
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // 🧠 NEW: Success dialog visibility controller
 
   // Form Field Hooks
   const [name, setName] = useState("");
@@ -42,8 +43,8 @@ export default function JobDetailsPage() {
 
   const handleApplyClick = () => {
     const userRole = localStorage.getItem("userRole");
-    // If guest user, open our custom UI warning dialog box instead of browser alert()
-    if (!userRole || userRole !== "user") {
+    
+    if (!userRole || userRole !== "student") {
       setIsWarningModalOpen(true);
       return;
     }
@@ -55,6 +56,8 @@ export default function JobDetailsPage() {
     if (!resumeFile) return;
 
     setSubmitting(true);
+    const storedToken = localStorage.getItem("token") || "";
+
     const formData = new FormData();
     formData.append("name", name);
     formData.append("email", email);
@@ -65,16 +68,25 @@ export default function JobDetailsPage() {
     try {
       const response = await fetch("http://localhost:5000/api/applications", {
         method: "POST",
+        headers: {
+          "Authorization": `Bearer ${storedToken}`,
+        },
         body: formData,
       });
 
-      if (response.ok) {
-        alert("Application submitted successfully!");
+      const data = await response.json();
+
+      if (response.ok || data.success) {
+        // 🧠 FIXED: Hide form, reset inputs, and pop open our custom Success Dialog box
         setIsFormModalOpen(false);
+        setIsSuccessModalOpen(true);
         setName(""); setEmail(""); setPhone(""); setResumeFile(null);
+      } else {
+        alert(data.message || "Failed to submit application form pipeline.");
       }
     } catch (error) {
       console.error("Submission failed:", error);
+      alert("Connection failure trying to upload profiles pipeline.");
     } finally {
       setSubmitting(false);
     }
@@ -128,7 +140,7 @@ export default function JobDetailsPage() {
         </div>
       </div>
 
-      {/* --- MENTOR REQUIREMENT: CUSTOM SHADCN DIALOG BOX FOR GUEST AUTH WARNINGS --- */}
+      {/* --- CUSTOM DIALOG BOX FOR GUEST AUTH WARNINGS --- */}
       {isWarningModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-sm p-6 bg-white border border-gray-100 shadow-2xl rounded-3xl text-center space-y-4 animate-scaleUp">
@@ -147,6 +159,39 @@ export default function JobDetailsPage() {
               </button>
               <button onClick={() => router.push("/login")} className="w-1/2 p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm cursor-pointer">
                 Log In Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          🧠 NEW: CUSTOM DIALOG BOX FOR APPLICATION SUBMISSION SUCCESS
+         ========================================================================= */}
+      {isSuccessModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-sm p-6 bg-white border border-gray-100 shadow-2xl rounded-3xl text-center space-y-4 animate-scaleUp">
+            <div className="w-12 h-12 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mx-auto border border-green-100 shadow-sm">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Application Submitted!</h3>
+              <p className="text-gray-500 text-xs mt-1.5 leading-relaxed">
+                Your profile specs and resume credentials have been delivered successfully. You can track this position status inside your profile tab.
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button 
+                onClick={() => setIsSuccessModalOpen(false)} 
+                className="w-1/2 p-2.5 border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-50 cursor-pointer"
+              >
+                Close Window
+              </button>
+              <button 
+                onClick={() => router.push("/my-applications")} 
+                className="w-1/2 p-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold shadow-sm cursor-pointer"
+              >
+                Track Status
               </button>
             </div>
           </div>
@@ -180,7 +225,7 @@ export default function JobDetailsPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-600">Attach Resume / CV</label>
+                <label className="text-xs font-bold text-gray-600">Attach Resume / CV (PDF or DOCX)</label>
                 <div className="border-2 border-dashed border-gray-200 bg-gray-50/50 p-4 rounded-xl flex flex-col items-center justify-center relative hover:bg-gray-50">
                   <FileText className="w-6 h-6 text-gray-400 mb-1" />
                   <input type="file" required onChange={(e) => setResumeFile(e.target.files ? e.target.files[0] : null)} className="absolute inset-0 opacity-0 cursor-pointer" />
